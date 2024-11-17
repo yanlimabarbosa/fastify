@@ -1,15 +1,26 @@
 import { it, beforeAll, afterAll, describe, expect } from 'vitest'
+import { execSync } from 'node:child_process'
 import request from 'supertest'
 import { app } from '../src/app'
-import { title } from 'process'
+import { beforeEach } from 'node:test'
 
 describe('Transactions routes', () => {
   beforeAll(async () => {
+    // exec migrations on enviroment before running tests:
+    execSync('npm run knex migrate:latest')
+
+    // ensure that the application is fully initialized and ready to handle requests:
     await app.ready()
   })
 
   afterAll(async () => {
     await app.close()
+  })
+
+  beforeEach(() => {
+    // ensure each test is run in a clean environment
+    execSync('npm run knex migrate:rollback --all')
+    execSync('npm run knex migrate:latest')
   })
 
   it('should be able to create a new transaction', async () => {
